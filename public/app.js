@@ -62,18 +62,33 @@
     status(`Running ${calls} live searches…`);
     const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort(), 55000);
     try {
-      const r = await fetch("/api/run", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal: ctrl.signal });
-      let j = null; try { j = await r.json(); } catch {}
-      if (!r.ok || !j || !j.rows) {
-        const msg = r.status === 429 ? "Keenable's keyless pool is busy for this server right now (it allows 1,000 searches an hour per address)." :
-          (j && j.message) || "The live run didn't come back.";
-        failNotice(msg); status(""); return;
+      let j = null, serverStatus = 0;
+      try {
+        const r = await fetch("/api/run", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal: ctrl.signal });
+        serverStatus = r.status;
+        try { j = await r.json(); } catch {}
+        if (!r.ok || !j || !j.rows) j = null;
+      } catch (e) { if (e.name === "AbortError") throw e; }
+      if (!j) {
+        // Server path unavailable (its shared keyless pool may be busy): run everything from this browser instead.
+        status("Server busy, running from your browser…");
+        j = { ran_at: new Date().toISOString(), region: "your browser", auth: "keyless public endpoint", filters: {}, modes, rows: queries.map((q) => ({ q: q.q, gold: q.gold, runs: modes.map((mode) => ({ mode, ok: false, error: "pending" })) })) };
+        if (body.query_time) j.filters.query_time = body.query_time;
+        if (body.published_after) j.filters.published_after = body.published_after;
+      }
+      let retried = 0;
+      for (const row of j.rows) for (let k = 0; k < row.runs.length; k++) {
+        if (row.runs[k].ok) continue;
+        row.runs[k] = await browserSearch(row, row.runs[k].mode, j.filters || {}); retried++;
       }
       j.preset = preset.id === "custom" ? null : preset.id; j.label = preset.label; j.who = preset.who;
       j.queries = queries; j.prepared = false;
+      if (retried && j.region !== "your browser") j.region += ` + ${retried} from your browser`;
       render(j); status("");
       const fails = j.rows.flatMap((r) => r.runs).filter((x) => !x.ok).length;
+      if (fails === calls) { failNotice(serverStatus === 429 ? "Keenable's keyless pool is busy right now (1,000 searches an hour per address)." : "The live run didn't come back."); return; }
       if (fails) notice(`${fails} of ${calls} searches didn't come back (busy or timed out); they're marked in the table and left out of the numbers.`);
+      else if (retried) notice(`${retried} of ${calls} searches ran from your browser because the server's shared keyless pool was busy; their latency includes your own network.`, "info");
     } catch (e) {
       failNotice(e.name === "AbortError" ? "The live run took too long." : "Couldn't reach the server."); status("");
     } finally { clearTimeout(timer); $("#run").disabled = false; }
@@ -99,6 +114,39 @@
     } catch { status(""); notice("The prepared run isn't available. Press Run pilot for a live one."); }
   }
 
+  // ---------- browser fallback (Keenable's public endpoint allows CORS; app named via ?keenable_title=) ----------
+  function goldRank(results, gold) {
+    if (!gold?.length) return { rank: null, matched: null };
+    for (let i = 0; i < results.length; i++) {
+      let u; try { u = new URL(results[i].url); } catch { continue; }
+      const h = u.hostname.replace(/^www\./, "").toLowerCase();
+      for (const g of gold) {
+        const [d, ...p] = g.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/");
+        const path = p.length ? "/" + p.join("/") : "";
+        if ((h === d || h.endsWith("." + d)) && u.pathname.toLowerCase().startsWith(path)) return { rank: i + 1, matched: g };
+      }
+    }
+    return { rank: 0, matched: null };
+  }
+  async function browserSearch(row, mode, filters) {
+    const req = { query: row.q, mode, max_results: 10, snippet_max_length: 240, ...filters };
+    for (let t = 0; t < 3; t++) {
+      const t0 = performance.now();
+      try {
+        const r = await fetch("https://api.keenable.ai/v1/search/public?keenable_title=keenable-pilot-desk", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(req) });
+        const ms = Math.round(performance.now() - t0);
+        if (r.status === 429) { await new Promise((s) => setTimeout(s, 800 * (t + 1))); continue; }
+        if (!r.ok) return { mode, ok: false, ms, error: "upstream_error", origin: "browser" };
+        const j = await r.json();
+        const results = (j.results || []).slice(0, 10).map((x) => { let host = ""; try { host = new URL(x.url).hostname.replace(/^www\./, ""); } catch {} return { title: (x.title || "").slice(0, 160), url: x.url, host, snippet: (x.snippet || x.description || "").slice(0, 240), published_at: x.published_at || null, acquired_at: x.acquired_at || null }; });
+        const g = goldRank(results, row.gold);
+        await new Promise((s) => setTimeout(s, 150));
+        return { mode, ok: true, ms, served_mode: j.mode, gold_rank: g.rank, gold_matched: g.matched, results, origin: "browser" };
+      } catch { return { mode, ok: false, ms: 0, error: "network", origin: "browser" }; }
+    }
+    return { mode, ok: false, ms: 0, error: "rate_limited", origin: "browser" };
+  }
+
   // ---------- metrics ----------
   const pct = (arr, p) => { if (!arr.length) return null; const s = [...arr].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.ceil((p / 100) * s.length) - 1)]; };
   const fmtTime = (iso) => { try { return new Date(iso).toISOString().replace("T", " ").slice(0, 16) + " UTC"; } catch { return iso; } };
@@ -107,7 +155,9 @@
   function metrics(j) {
     const m = { lat: {}, n: j.rows.length };
     for (const mode of j.modes) {
-      const ms = j.rows.flatMap((r) => r.runs).filter((x) => x.mode === mode && x.ok).map((x) => x.ms);
+      const okRuns = j.rows.flatMap((r) => r.runs).filter((x) => x.mode === mode && x.ok);
+      const server = okRuns.filter((x) => x.origin !== "browser");
+      const ms = (server.length ? server : okRuns).map((x) => x.ms); // never mix server and browser latency
       m.lat[mode] = { p50: pct(ms, 50), p95: pct(ms, 95), n: ms.length };
     }
     const primary = j.modes.includes("realtime") ? "realtime" : j.modes[0];
@@ -164,7 +214,7 @@
       const rtxt = !r.gold?.length ? "not set" : rk == null ? "–" : rk === 0 ? "not in 10" : "#" + rk;
       t += `<tr><td><div class="q">${esc(r.q)}${tag ? `<span class="tag">${esc(tag)}</span>` : ""}</div><div class="fine">${esc((r.gold || []).join(", "))}</div></td>`;
       t += `<td><span class="rank ${rcls}">${rtxt}</span></td>`;
-      for (const mode of modes) { const x = r.runs.find((y) => y.mode === mode); t += `<td class="num">${x?.ok ? x.ms + " ms" : `<span class="err">${esc(x?.error || "–")}</span>`}</td>`; }
+      for (const mode of modes) { const x = r.runs.find((y) => y.mode === mode); t += `<td class="num">${x?.ok ? x.ms + " ms" + (x.origin === "browser" ? `<div class="fine">from browser</div>` : "") : `<span class="err">${esc(x?.error || "–")}</span>`}</td>`; }
       if (pr) {
         const items = pr.results.slice(0, 5).map((y, i) => `<li class="${pr.gold_rank === i + 1 ? "hit" : ""}"><a href="${esc(y.url)}" target="_blank" rel="noopener nofollow">${esc(y.title || y.url)}</a><div class="h">${esc(y.host)}${y.published_at ? " · published " + esc(y.published_at.slice(0, 10)) : ""}${y.acquired_at ? " · crawled " + esc(y.acquired_at.slice(0, 10)) : ""}</div></li>`).join("");
         t += `<td><div>${pr.results.slice(0, 3).map((y) => esc(y.host)).join(" · ") || "no results"}</div><details><summary>Top 5</summary><ol class="res">${items}</ol></details></td>`;
