@@ -74,7 +74,7 @@
       <div class="card">
         <div class="card-h"><h2>5. Size the deal</h2></div>
         <div class="calc">
-          <label>Agent tasks per day <input type="number" id="c-tasks" value="200000" min="0" step="1000"></label>
+          <label>Agent tasks per day <input type="number" id="c-tasks" value="50000" min="0" step="1000"></label>
           <label>Searches per task <input type="number" id="c-spt" value="4" min="0" step="1"></label>
           <label>Fetches per task <input type="number" id="c-fpt" value="2" min="0" step="1"></label>
         </div>
@@ -104,6 +104,22 @@
       <h1>Week one, as the founding GTM hire.</h1>
       <p class="lede">The job post in five lines, and what I'd do with each in the first week.</p>
     </div>
+    <div class="card findings">
+      <div class="card-h"><h2>What I found running it</h2><span class="muted small">30 Sep, 03:53 UTC · 24 queries x 2 modes · keyless endpoint · Vercel iad1</span></div>
+      <div class="tiles four">
+        <div class="tile"><div class="k">Latency p50</div><div class="v">128 ms</div><div class="s">p95 180 ms over 48 calls, network included</div></div>
+        <div class="tile"><div class="k">Expected source in top 3</div><div class="v">18/24</div><div class="s">across all four prospect sets</div></div>
+        <div class="tile"><div class="k">realtime vs pro</div><div class="v">same lists</div><div class="s">on every query, keyless tier</div></div>
+        <div class="tile"><div class="k">Point in time</div><div class="v">works</div><div class="s">query_time before 16 Sep hides the Baseten launch</div></div>
+      </div>
+      <p>The six misses share two patterns, both fixable ranking signals rather than index gaps (the right page was in the top 10 in five of six):</p>
+      <ul class="flist">
+        <li><b>Forks above the canonical repo.</b> "Pipecat voice agent framework": six forks, then pipecat-ai/pipecat at #7. "Lightpanda headless browser": lightpanda-io/browser at #9 behind forks.</li>
+        <li><b>Look-alikes and aggregators above the official source.</b> "California DMV appointment": dmvcalifornia.us and similar before dmv.ca.gov at #7. "SFO airport parking rates": flysfo.com not in the top 10. NVIDIA's 10-K on investor.nvidia.com at #5; Rust's own announcement at #8.</li>
+      </ul>
+      <p class="fine">This is the list I'd bring to Matthias in week one, with the queries attached. Press "Show prepared run" on the first tab to see every result.</p>
+    </div>
+
     <div class="plan">
       <div class="step"><div class="n">1</div><div><h3>Own the technical win</h3><p>Turn Pilot Desk into the standard first meeting: the prospect's own queries, live, in 15 minutes, before anyone asks for a benchmark. Every run leaves a shareable verdict and a sized deal.</p></div></div>
       <div class="step"><div class="n">2</div><div><h3>Build the demo and the integration</h3><p>Ship the harness adapters labs actually run (Inspect-style eval tasks, a LangGraph/Agents-SDK tool, a Baseten hosted-tool example) so "stand Keenable up in your stack" takes an afternoon, not a sprint.</p></div></div>

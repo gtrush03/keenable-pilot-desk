@@ -135,7 +135,7 @@
     }
     m.wins = scored.filter((r) => pr(r)?.gold_rank === 1).map((r) => r.q);
     m.misses = scored.map((r) => ({ r, x: pr(r) })).filter(({ x }) => x && !(x.gold_rank >= 1 && x.gold_rank <= 3))
-      .map(({ r, x }) => ({ q: r.q, rank: x.gold_rank, got: x.results.slice(0, 3).map((y) => y.host), gold: r.gold }));
+      .map(({ r, x }) => ({ q: r.q, rank: x.gold_rank, got: x.results.slice(0, 3).map((y) => y.host), gold: r.gold, matched: x.gold_matched || r.gold[0] }));
     return m;
   }
 
@@ -224,16 +224,17 @@ claude mcp add keenable --transport http https://api.keenable.ai/mcp \\
     if (m.wins.length) { lines.push(""); lines.push("WHERE IT WINS"); m.wins.forEach((q) => lines.push(`- ${q}`)); }
     if (m.misses.length) {
       lines.push(""); lines.push("WHERE TO DIG IN (take to the search team)");
-      m.misses.forEach((x) => lines.push(`- ${x.q}: expected ${x.gold[0]} ${x.rank ? "at #" + x.rank : "not in top 10"}; top 3 were ${x.got.join(", ")}`));
+      m.misses.forEach((x) => lines.push(`- ${x.q}: ${x.rank ? `first expected source (${x.matched}) at #${x.rank}` : `none of ${x.gold.join(", ")} in the top 10`}; top 3 were ${x.got.join(", ")}`));
     }
     lines.push(""); lines.push("RECOMMENDATION");
     if (!m.scored) lines.push("- Add the domains an evaluator would expect to each query, then rerun to score it.");
-    else if (rate >= 0.7) lines.push("- Strong enough to propose a pilot now. Lead with latency and the wins above; pre-empt the misses with the team's view before the prospect finds them.");
-    else lines.push("- Don't propose a pilot on this set yet. Review the misses with the search team first, rerun with a key in pro mode, then book the pilot.");
+    else if (rate >= 0.8) lines.push("- Ready: propose the pilot now. Lead with latency and the wins above.");
+    else if (rate >= 0.5) lines.push("- Ready after prep: propose the pilot, but take the misses to the search team first so we raise them before the prospect does, and rerun them with a key in pro mode.");
+    else lines.push("- Not yet: this set plays to competitors' strengths. Fix or explain the misses with the search team, rerun with a key in pro mode, then book the pilot.");
     lines.push(`- Pilot shape: 2 weeks on their own benchmark, index frozen with query_time so reruns match, success = expected-source@3 at least equal to their current provider, p95 under their latency budget, cost per 1,000 tasks.`);
     lines.push(""); lines.push("SIZE (list prices, keenable.ai/pricing)");
     lines.push(`- ${c.tasks.toLocaleString("en-US")} tasks/day x (${c.spt} searches + ${c.fpt} fetches) = ${(c.perMonth / 1e6).toFixed(1)}M requests/month, avg ${c.rps.toFixed(1)} req/s.`);
-    lines.push(`- Builder tier ${money(c.builder)}/month; frontier tier ${money(c.frontier)}/month${c.rps >= 100 ? "" : " (needs 100+ RPS, so this is a ceiling to negotiate toward)"}.`);
+    lines.push(`- Builder tier ${money(c.builder)}/month; frontier tier ${money(c.frontier)}/month${c.rps >= 100 ? " (qualifies: 100+ RPS)" : ` (the frontier rate is listed for 100+ RPS; at ${c.rps.toFixed(0)} req/s this is a volume-commitment conversation)`}.`);
     return lines.join("\n");
   }
 
@@ -248,7 +249,7 @@ claude mcp add keenable --transport http https://api.keenable.ai/mcp \\
     const el = $("#bringback");
     if (!m.misses.length) { el.textContent = "Log every query where the expected source missed the top 3 and bring that list to the team every week. Your last run had no misses."; return; }
     el.innerHTML = "Log every query where the expected source missed the top 3 and bring that list to Matthias and the team every week. From your last run:<br>" +
-      m.misses.map((x) => `&middot; <b>${esc(x.q)}</b>: ${esc(x.gold[0])} ${x.rank ? "at #" + x.rank : "not in top 10"}`).join("<br>");
+      m.misses.map((x) => `&middot; <b>${esc(x.q)}</b>: ${x.rank ? `${esc(x.matched)} at #${x.rank}` : "no expected source in the top 10"}`).join("<br>");
   }
 
   // ---------- radar ----------

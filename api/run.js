@@ -21,10 +21,10 @@ export function goldRank(results, gold) {
     for (const g of gold) {
       const [d, ...p] = g.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/");
       const path = p.length ? "/" + p.join("/") : "";
-      if ((h === d || h.endsWith("." + d)) && u.pathname.toLowerCase().startsWith(path)) return i + 1;
+      if ((h === d || h.endsWith("." + d)) && u.pathname.toLowerCase().startsWith(path)) return { rank: i + 1, matched: g };
     }
   }
-  return 0;
+  return { rank: 0, matched: null };
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -64,7 +64,7 @@ export default async function handler(req, res) {
     if (!r.ok) return { mode, ok: false, ms: r.ms, error: r.error, status: r.status };
     return {
       mode, ok: true, ms: r.ms, served_mode: r.mode, remaining: r.remaining,
-      gold_rank: goldRank(r.results, q.gold),
+      ...(() => { const g = goldRank(r.results, q.gold); return g ? { gold_rank: g.rank, gold_matched: g.matched } : { gold_rank: null }; })(),
       results: r.results.slice(0, 10).map((x) => ({
         title: (x.title || "").slice(0, 160), url: x.url, host: host(x.url),
         snippet: (x.snippet || x.description || "").slice(0, 240),

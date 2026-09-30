@@ -26,7 +26,7 @@ window.PRESETS = [
       { q: "Pipecat voice agent framework", gold: ["github.com/pipecat-ai", "pipecat.ai", "docs.pipecat.ai"], tag: "product" },
       { q: "SFO airport parking rates", gold: ["flysfo.com"], tag: "local" },
       { q: "Caltrain weekend schedule", gold: ["caltrain.com"], tag: "local" },
-      { q: "Golden State Warriors schedule", gold: ["nba.com", "espn.com"], tag: "sports" },
+      { q: "Golden State Warriors schedule", gold: ["nba.com", "espn.com", "cbssports.com", "sports.yahoo.com", "nytimes.com/athletic", "theathletic.com"], tag: "sports" },
       { q: "Gradium voice AI", gold: ["gradium.ai"], tag: "product" },
       { q: "California DMV appointment", gold: ["dmv.ca.gov"], tag: "local" },
     ] },
@@ -37,7 +37,7 @@ window.PRESETS = [
       { q: "Bun.serve websocket API", gold: ["bun.sh", "bun.com"], tag: "docs" },
       { q: "Next.js 16 upgrade guide", gold: ["nextjs.org"], tag: "docs" },
       { q: "PostgreSQL 18 release notes", gold: ["postgresql.org"], tag: "docs" },
-      { q: "Rust 2024 edition guide", gold: ["doc.rust-lang.org"], tag: "docs" },
+      { q: "Rust 2024 edition guide", gold: ["doc.rust-lang.org", "blog.rust-lang.org"], tag: "docs" },
       { q: "Vercel AI SDK tool calling", gold: ["ai-sdk.dev", "sdk.vercel.ai", "vercel.com"], tag: "docs" },
     ] },
 ];
