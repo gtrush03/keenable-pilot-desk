@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pilot Desk: Keenable on the prospect's queries</title>
+<meta name="description" content="Run a prospect's own queries through Keenable's Search API and get a pilot verdict. An independent prototype by George Trushevskiy.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-in">
+    <div class="brand"><span class="dot"></span>Pilot Desk <span class="muted">for Keenable search</span></div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="pilot" aria-selected="true">Pilot run</button>
+      <button role="tab" data-tab="radar" aria-selected="false">Channel radar</button>
+      <button role="tab" data-tab="week" aria-selected="false">Week one</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- PILOT -->
+  <section id="tab-pilot" class="tab">
+    <div class="hero">
+      <h1>Their queries, not ours.</h1>
+      <p class="lede">Pick a prospect, or paste the queries their agent really sends. Pilot Desk runs each one live through Keenable's Search API in both modes, checks whether the source an evaluator expects comes back near the top, and writes the verdict you'd hand the Head of Revenue.</p>
+      <p class="fine">Independent prototype. It calls Keenable's documented keyless endpoint (<code>/v1/search/public</code>) from a server in US East. Not made or endorsed by Keenable.</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-h"><h2>1. Prospect</h2></div>
+        <div id="presets" class="chips"></div>
+        <p id="preset-who" class="who"></p>
+        <label class="lbl" for="queries">Queries, one per line. After a <code>|</code>, the domains you'd expect near the top (optional).</label>
+        <textarea id="queries" rows="8" spellcheck="false"></textarea>
+        <div class="opts">
+          <label class="chk"><input type="checkbox" id="m-realtime" checked> realtime</label>
+          <label class="chk"><input type="checkbox" id="m-pro" checked> pro</label>
+          <label class="opt">Freeze index at <input type="date" id="qt" min="2025-01-01"></label>
+          <label class="opt">Published after <input type="date" id="pa" min="2020-01-01"></label>
+        </div>
+        <div class="actions">
+          <button id="run" class="btn primary">Run pilot</button>
+          <button id="prepared" class="btn ghost">Show prepared run</button>
+          <span id="status" class="status" aria-live="polite"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>2. Scorecard</h2><span id="runmeta" class="muted small"></span></div>
+        <div id="empty" class="empty">
+          <p>Run a pilot to see latency, official-source hits and freshness for these queries.</p>
+        </div>
+        <div id="score" class="tiles" hidden></div>
+        <div id="notice" class="notice" hidden></div>
+      </div>
+    </div>
+
+    <div id="results-wrap" class="card" hidden>
+      <div class="card-h"><h2>3. Query by query</h2><span class="muted small">Expected source rank: where the first result from an expected domain landed (top 10).</span></div>
+      <div class="tbl-wrap"><table id="results"></table></div>
+    </div>
+
+    <div class="grid2" id="after" hidden>
+      <div class="card">
+        <div class="card-h"><h2>4. Pilot verdict</h2><button id="copy" class="btn small ghost">Copy</button></div>
+        <pre id="memo" class="memo"></pre>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>5. Size the deal</h2></div>
+        <div class="calc">
+          <label>Agent tasks per day <input type="number" id="c-tasks" value="200000" min="0" step="1000"></label>
+          <label>Searches per task <input type="number" id="c-spt" value="4" min="0" step="1"></label>
+          <label>Fetches per task <input type="number" id="c-fpt" value="2" min="0" step="1"></label>
+        </div>
+        <div id="calc-out" class="calc-out"></div>
+        <p class="fine">List prices from keenable.ai/pricing: $4 per 1,000 requests for builders; $1 per 1,000 at 100+ RPS for labs and platforms; 100,000 free requests a month. Assumes search and fetch each cost one credit (docs.keenable.ai/credits); real prices are set per organization.</p>
+        <div class="card-h" style="margin-top:18px"><h2>6. Drop into their harness</h2></div>
+        <pre id="snippet" class="code"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- RADAR -->
+  <section id="tab-radar" class="tab" hidden>
+    <div class="hero">
+      <h1>Where the next keyless default comes from.</h1>
+      <p class="lede">Keenable already ships inside Lightpanda, LibreChat, ZeroClaw and Baseten. This is the next list: agent frameworks, runtimes and inference platforms that don't list Keenable yet, what search they ship today (from their own docs), and the first move for each.</p>
+      <p class="fine" id="radar-meta">Prepared in advance with Keenable search and fetch. Every provider claim links to the page it came from. First-touch notes are drafts for this demo; nothing was sent.</p>
+    </div>
+    <div class="chips" id="radar-filter"></div>
+    <div id="radar" class="radar"></div>
+    <div id="radar-empty" class="empty" hidden><p>The radar data didn't load. Refresh to try again.</p></div>
+  </section>
+
+  <!-- WEEK ONE -->
+  <section id="tab-week" class="tab" hidden>
+    <div class="hero">
+      <h1>Week one, as the founding GTM hire.</h1>
+      <p class="lede">The job post in five lines, and what I'd do with each in the first week.</p>
+    </div>
+    <div class="plan">
+      <div class="step"><div class="n">1</div><div><h3>Own the technical win</h3><p>Turn Pilot Desk into the standard first meeting: the prospect's own queries, live, in 15 minutes, before anyone asks for a benchmark. Every run leaves a shareable verdict and a sized deal.</p></div></div>
+      <div class="step"><div class="n">2</div><div><h3>Build the demo and the integration</h3><p>Ship the harness adapters labs actually run (Inspect-style eval tasks, a LangGraph/Agents-SDK tool, a Baseten hosted-tool example) so "stand Keenable up in your stack" takes an afternoon, not a sprint.</p></div></div>
+      <div class="step"><div class="n">3</div><div><h3>Run evaluations to a verdict</h3><p>Default every pilot to point-in-time search (<code>query_time</code>): the index is frozen, so the lab can rerun the same eval next week and get the same answer. Success criteria and a date are agreed on day one.</p></div></div>
+      <div class="step"><div class="n">4</div><div><h3>Own the platform channel</h3><p>Work the Channel radar: one upstream PR a week that makes Keenable the no-key fallback, like Lightpanda. Each merged default is a self-serve funnel that feeds accounts.</p></div></div>
+      <div class="step"><div class="n">5</div><div><h3>Bring back what they need</h3><p id="bringback">Log every query where the expected source missed the top 3 and bring that list to Matthias and the team every week. Run a pilot on the first tab and your misses show up here.</p></div></div>
+    </div>
+    <div class="card about">
+      <h2>Who built this</h2>
+      <p>George Trushevskiy, founder of TRU Synth: always-on AI agents, each with its own computer and browser. SynthOS is 700k+ lines across a native Mac app, web and cloud, with 500+ people using it. I build the thing myself, then take it to the customer.</p>
+      <p><a href="https://george.trusynth.com" target="_blank" rel="noopener">george.trusynth.com</a> &middot; <a href="https://github.com/gtrush03" target="_blank" rel="noopener">github.com/gtrush03</a></p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    Built by <a href="https://george.trusynth.com" target="_blank" rel="noopener">George Trushevskiy</a> for Keenable's Founding GTM role &middot; <a href="https://github.com/gtrush03" target="_blank" rel="noopener">github.com/gtrush03</a>
+    <div class="fine">Independent prototype on Keenable's public API. Not affiliated with or endorsed by Keenable.</div>
+  </div>
+</footer>
+<script src="/presets.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

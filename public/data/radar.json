@@ -1,0 +1,252 @@
+[
+  {
+    "name": "OpenRouter",
+    "kind": "inference platform",
+    "url": "https://openrouter.ai",
+    "search_today": [
+      "native",
+      "Exa",
+      "Firecrawl",
+      "Parallel",
+      "Perplexity"
+    ],
+    "evidence": "\"engine\": \"parallel\", // Optional: \"native\", \"exa\", \"firecrawl\", \"parallel\", \"perplexity\", or undefined",
+    "source": "https://openrouter.ai/docs/guides/features/plugins/web-search",
+    "keyless_fallback": false,
+    "keenable_listed": false,
+    "play": "hosted tool",
+    "why": "Its web plugin already routes search to a pluggable engine parameter, so one new engine value would put Keenable behind every non-native model on the router.",
+    "first_touch": "Your web plugin exposes an engine parameter (native, exa, firecrawl, parallel, perplexity) and defaults to Exa for models without native search. Keenable is a search API with its own index and realtime and pro modes, plus a point-in-time query_time parameter for reproducible results. Would you consider \"keenable\" as an engine value? We can supply the adapter code and cover domain filters to match your compatibility table.",
+    "week1_action": "Map Keenable's search response onto OpenRouter's url_citation annotation schema and send the platform team a working engine adapter plus a latency/quality comparison against the Exa default."
+  },
+  {
+    "name": "Groq",
+    "kind": "inference platform",
+    "url": "https://groq.com",
+    "search_today": [
+      "Exa"
+    ],
+    "evidence": "Browser search functionality is powered by Exa, a search engine designed for AI applications.",
+    "source": "https://console.groq.com/docs/browser-search",
+    "keyless_fallback": false,
+    "keenable_listed": false,
+    "play": "hosted tool",
+    "why": "Groq runs web search server-side in the inference loop (browser_search on gpt-oss models), the same hosted-tool pattern Keenable already ships on Baseten; its docs also show Compound was decommissioned on 21 Sep 2026, so its built-in tool stack is changing now.",
+    "first_touch": "Your browser_search built-in tool for gpt-oss-120b and gpt-oss-20b runs server-side and is powered by Exa. Keenable already runs as a server-side search and fetch tool on Baseten Model APIs, inside the inference loop. If you are evaluating a second backend or a fetch tool, we can share that Baseten setup and run a side-by-side on your latency targets.",
+    "week1_action": "Build a gpt-oss-120b demo on Groq that calls Keenable search and fetch as local tools, measure end-to-end latency against browser_search, and send the numbers to Groq's platform team."
+  },
+  {
+    "name": "Together AI",
+    "kind": "inference platform",
+    "url": "https://www.together.ai",
+    "search_today": [
+      "Tavily"
+    ],
+    "evidence": "We settled on Tavily to retrieve relevant information from the web.",
+    "source": "https://www.together.ai/blog/open-deep-research",
+    "keyless_fallback": false,
+    "keenable_listed": false,
+    "play": "template/cookbook",
+    "why": "Together's own Open Deep Research reference app hard-wires Tavily as its search layer, so templates and cookbooks are where its developers pick a search API.",
+    "first_touch": "Open Deep Research uses Tavily for search and raw page content. Keenable offers search plus a separate fetch that returns page content as markdown, and has a keyless public endpoint, so cookbook readers could run the notebook with no extra signup. Would you accept a PR adding Keenable as an alternative search backend in the Open Deep Research code or a together-cookbook notebook?",
+    "week1_action": "Open a PR to togethercomputer/together-cookbook adding a Keenable-powered research-agent notebook that runs on the keyless endpoint."
+  },
+  {
+    "name": "Fireworks AI",
+    "kind": "inference platform",
+    "url": "https://fireworks.ai",
+    "search_today": [
+      "native WebSearch (server-side; backend provider not named)"
+    ],
+    "evidence": "Web search is built into Fireworks. When Claude Code calls its native `WebSearch` tool, Fireworks runs the search server-side and returns the results",
+    "source": "https://docs.fireworks.ai/ecosystem/fireconnect/websearch-mcp",
+    "keyless_fallback": false,
+    "keenable_listed": false,
+    "play": "hosted tool",
+    "why": "Fireworks now answers harness WebSearch calls server-side for any model, so it needs a search backend it controls; that is the Baseten-style hosted-tool slot.",
+    "first_touch": "Your FireConnect docs say Fireworks now handles Claude Code's native WebSearch server-side for any Fireworks model, replacing the old fireworks-websearch MCP. Keenable runs as the server-side search and fetch tool on Baseten Model APIs and has its own index, with realtime and pro modes. If the backend behind that search is open to evaluation, we can share our Baseten setup and run a benchmark on your traffic shape.",
+    "week1_action": "Send Fireworks' platform team a short benchmark of Keenable search and fetch against the WebSearch/WebFetch contract their FireConnect docs describe."
+  },
+  {
+    "name": "OpenAI Agents SDK",
+    "kind": "agent framework",
+    "url": "https://openai.github.io/openai-agents-python/",
+    "search_today": [
+      "WebSearchTool"
+    ],
+    "evidence": "The WebSearchTool lets an agent search the web.",
+    "source": "https://openai.github.io/openai-agents-python/tools/",
+    "keyless_fallback": false,
+    "keenable_listed": false,
+    "play": "template/cookbook",
+    "why": "Its only built-in search is the OpenAI-hosted WebSearchTool, which needs OpenAIResponsesModel, so developers running other models through the SDK need a function-tool search they can plug in.",
+    "first_touch": "WebSearchTool in the Agents SDK is a hosted tool tied to OpenAIResponsesModel. For agents on other models, Keenable can be added as a function tool or through its MCP server, which the SDK already supports. Would an example under examples/ showing Keenable search and fetch as function tools, on the keyless endpoint, be useful?",
+    "week1_action": "Publish a keenable-openai-agents example (function tools plus MCP server config) and propose it for the SDK's examples folder."
+  },
+  {
+    "name": "CrewAI",
+    "kind": "agent framework",
+    "url": "https://www.crewai.com",
+    "search_today": [
+      "Serper Dev Tool",
+      "Brave Search Tool",
+      "Exa Search Tool",
+      "LinkUp Search Tool",
+      "Tavily Search Tool",
+      "SerpApi Google Search"
+    ],
+    "evidence": "Privacy-focused search with Brave’s independent search index.",
+    "source": "https://docs.crewai.com/en/tools/search-research/overview",
+    "keyless_fallback": false,
+    "keenable_listed": false,
+    "play": "provider option",
+    "why": "CrewAI's search-and-research tools page is a shelf of competing search APIs (Serper, Brave, Exa, Linkup, Tavily, SerpApi), and every tool listed needs a key, so a keyless option would stand out.",
+    "first_touch": "The Search & Research page in the crewai-tools docs lists Serper, Brave, Exa, LinkUp, Tavily and SerpApi, and each one needs an API key. Keenable has its own index and a keyless public endpoint, so a KeenableSearchTool would work in a fresh crew with no signup. We'd like to open a PR adding KeenableSearchTool and KeenableFetchTool next to TavilySearchTool, with docs and tests.",
+    "week1_action": "Open a PR adding KeenableSearchTool and KeenableFetchTool next to TavilySearchTool in crewai-tools, plus a docs page in the Search & Research section."
+  },
+  {
+    "name": "smolagents (Hugging Face)",
+    "kind": "agent framework",
+    "url": "https://huggingface.co/docs/smolagents",
+    "search_today": [
+      "ApiWebSearchTool (Brave Search API)",
+      "DuckDuckGoSearchTool",
+      "GoogleSearchTool",
+      "WebSearchTool"
+    ],
+    "evidence": "Web search tool that performs searches using the DuckDuckGo search engine.",
+    "source": "https://huggingface.co/docs/smolagents/reference/default_tools",
+    "keyless_fallback": true,
+    "keenable_listed": false,
+    "play": "keyless default",
+    "why": "smolagents defaults to keyless scraping-style search (DuckDuckGoSearchTool, and WebSearchTool with engine='duckduckgo'), which is the exact slot Keenable fills in Nanobot and ZeroClaw with an API built for agents.",
+    "first_touch": "The default_tools reference lists DuckDuckGoSearchTool and WebSearchTool (engine='duckduckgo') as the keyless options, and ApiWebSearchTool, which defaults to the Brave API and needs BRAVE_API_KEY. Keenable's public endpoint needs no key (1,000 req/hour per IP with an X-Keenable-Title header), so it could be a keyless engine that doesn't depend on scraping. Would you take a PR adding 'keenable' as an engine option to WebSearchTool?",
+    "week1_action": "Open a PR adding engine='keenable' to smolagents' WebSearchTool (keyless public endpoint), with tests and a docs update."
+  },
+  {
+    "name": "Pydantic AI",
+    "kind": "agent framework",
+    "url": "https://ai.pydantic.dev",
+    "search_today": [
+      "DuckDuckGo",
+      "Tavily",
+      "Exa"
+    ],
+    "evidence": "The DuckDuckGo search tool allows you to search the web for information.",
+    "source": "https://ai.pydantic.dev/common-tools/",
+    "keyless_fallback": true,
+    "keenable_listed": false,
+    "play": "provider option",
+    "why": "Pydantic AI's common_tools module ships search as optional install groups (duckduckgo, tavily, exa), so a keenable group would put Keenable right beside the keyless DuckDuckGo default and the two paid APIs.",
+    "first_touch": "Your common tools page ships duckduckgo_search_tool, tavily_search_tool and an Exa tool as optional install groups. Keenable has a keyless public endpoint and its own index, and has search and fetch tools in a similar shape, so a keenable_search_tool could follow the tavily_search_tool pattern (developer-fixed params hidden from the LLM schema). Would you accept a PR adding a pydantic-ai-slim[keenable] group?",
+    "week1_action": "Open a PR adding pydantic_ai.common_tools.keenable (search and fetch) as a pydantic-ai-slim[keenable] optional group, following the tavily_search_tool factory pattern."
+  },
+  {
+    "name": "Agno",
+    "kind": "agent framework",
+    "url": "https://www.agno.com",
+    "search_today": [
+      "WebSearchTools (DDGS: Google, Bing, DuckDuckGo, Brave, Yandex, Yahoo)"
+    ],
+    "evidence": "Search the web with WebSearchTools using the DDGS meta-search library across backends like Google, Bing, DuckDuckGo, Brave, Yandex, and Yahoo.",
+    "source": "https://docs.agno.com/tools/toolkits/search/websearch",
+    "keyless_fallback": true,
+    "keenable_listed": false,
+    "play": "provider option",
+    "why": "Agno calls the keyless DDGS-based WebSearchTools its recommended general search toolkit, and its toolkit index (https://docs.agno.com/tools/toolkits/overview) lists more than 20 search toolkits, including Exa, Tavily, Linkup, Parallel, Perplexity and Brave Search, but not Keenable.",
+    "first_touch": "Your docs recommend WebSearchTools, which uses DDGS across Google, Bing, DuckDuckGo and other backends, and the toolkit index lists Exa, Tavily, Linkup, Parallel and others. Keenable would add a keyless search API with its own index and a fetch tool that returns markdown. We'd like to contribute a KeenableTools toolkit with a docs page in the Search section.",
+    "week1_action": "Open a PR adding agno/tools/keenable.py (KeenableTools: search and fetch, keyless by default) plus a docs page under tools/toolkits/search."
+  },
+  {
+    "name": "AG2 (AutoGen)",
+    "kind": "agent framework",
+    "url": "https://ag2.ai",
+    "search_today": [
+      "GoogleSearchTool",
+      "PerplexitySearchTool",
+      "TavilySearchTool"
+    ],
+    "evidence": "TavilySearchTool allows your agents to perform real-time, AI-powered web searches using the Tavily Search API — purpose-built for AI agents and RAG workflows.",
+    "source": "https://docs.ag2.ai/latest/docs/user-guide/reference-tools",
+    "keyless_fallback": "unknown",
+    "keenable_listed": false,
+    "play": "provider option",
+    "why": "AG2's reference-tools page lists only three web search tools (Google, Perplexity, Tavily), and its Deep Research and Quick Research tools are built on Tavily, so a new search tool has room here.",
+    "first_touch": "Your reference tools list GoogleSearchTool, PerplexitySearchTool and TavilySearchTool, and QuickResearchTool is built on Tavily search. Keenable offers search and fetch with its own index, a keyless public endpoint, and an MCP server. Would you accept a KeenableSearchTool in the reference tools, and possibly an option to use it as QuickResearchTool's search backend?",
+    "week1_action": "Open a PR adding KeenableSearchTool to AG2's reference tools (mirroring TavilySearchTool's interface) with a docs page and notebook."
+  },
+  {
+    "name": "Letta",
+    "kind": "agent runtime",
+    "url": "https://www.letta.com",
+    "search_today": [
+      "Exa"
+    ],
+    "evidence": "Search the internet in real-time using Exa’s AI-powered search engine.",
+    "source": "https://docs.letta.com/guides/agents/web-search",
+    "keyless_fallback": false,
+    "keenable_listed": false,
+    "play": "keyless default",
+    "why": "Letta's built-in web_search works out of the box only on the hosted Letta API; self-hosted Docker users must bring an EXA_API_KEY, which is exactly the gap a keyless default fills.",
+    "first_touch": "Your built-in server tools doc says web_search uses Exa and that Docker needs EXA_API_KEY, while fetch_webpage works everywhere. Keenable's public endpoint needs no key, so self-hosted Letta could have working web_search out of the box, the way Nanobot and ZeroClaw use Keenable. Would you consider a PR that uses Keenable when no EXA_API_KEY is set?",
+    "week1_action": "Open a PR to letta-ai/letta that falls back to Keenable's keyless endpoint for web_search when EXA_API_KEY is unset, with a config flag to choose the provider."
+  },
+  {
+    "name": "Goose (Block)",
+    "kind": "agent runtime",
+    "url": "https://block.github.io/goose/",
+    "search_today": [
+      "Tavily (MCP extension)"
+    ],
+    "evidence": "This tutorial covers how to add the Tavily Web Search MCP Server as a goose extension to enable AI-powered web search functionality.",
+    "source": "https://block.github.io/goose/docs/mcp/tavily-mcp",
+    "keyless_fallback": "unknown",
+    "keenable_listed": false,
+    "play": "template/cookbook",
+    "why": "Goose adds web search through MCP extension tutorials and one-click goose:// install links, and Keenable already runs an MCP server, so a docs page is the whole integration.",
+    "first_touch": "Goose's docs have a Tavily Web Search Extension page with a goose:// one-click installer that needs TAVILY_API_KEY. Keenable has an MCP server for search and fetch, and a keyless public endpoint. We'd like to contribute a matching \"Keenable Web Search Extension\" tutorial with an installer link.",
+    "week1_action": "Open a docs PR adding a Keenable Web Search Extension page (MCP config plus goose:// install link) to Goose's MCP servers section."
+  },
+  {
+    "name": "LiveKit Agents",
+    "kind": "voice agents",
+    "url": "https://docs.livekit.io/agents/",
+    "search_today": [
+      "OpenAI WebSearch",
+      "Gemini GoogleSearch",
+      "Mistral AI WebSearch",
+      "SpaceXAI WebSearch"
+    ],
+    "evidence": "Many LLM providers, including OpenAI, Gemini, and SpaceXAI, include built-in server-side tools that are executed entirely within a single API call. Examples include web search",
+    "source": "https://docs.livekit.io/agents/logic/tools/",
+    "keyless_fallback": false,
+    "keenable_listed": false,
+    "play": "provider option",
+    "why": "LiveKit Agents only gets web search through model-provider tools tied to specific LLMs, and Keenable already ships KeenableWebSearch for Pipecat, the closest open-source voice framework, so this is a direct port.",
+    "first_touch": "LiveKit Agents' tools doc gets web search only from provider tools (OpenAI WebSearch, Gemini GoogleSearch, Mistral and SpaceXAI WebSearch), which lock the agent to those LLMs. Keenable already ships a low-latency KeenableWebSearch for Pipecat voice agents and could offer the same as a model-agnostic LiveKit plugin or function tool. Would you be open to a livekit-plugins-keenable package or an example in the examples folder?",
+    "week1_action": "Port the Pipecat KeenableWebSearch to a livekit-plugins-keenable function tool and open a PR adding a voice web-search example to livekit/agents."
+  },
+  {
+    "name": "Open WebUI",
+    "kind": "chat UI",
+    "url": "https://openwebui.com",
+    "search_today": [
+      "Exa",
+      "Tavily",
+      "SearchApi",
+      "Serper",
+      "SerpApi",
+      "Brave",
+      "Kagi",
+      "SearXNG"
+    ],
+    "evidence": "start with a hosted search API built for LLM workflows, such as Exa, Tavily, SearchApi, Serper, SerpApi, Brave, or Kagi.",
+    "source": "https://docs.openwebui.com/features/chat-conversations/web-search",
+    "keyless_fallback": true,
+    "keenable_listed": false,
+    "play": "keyless default",
+    "why": "Open WebUI already documents 28 web search providers, including a keyless DDGS option, and Keenable is already the keyless provider in LibreChat, the closest comparable open chat UI.",
+    "first_touch": "Your web search docs list 28 providers and note that some work without an account. Keenable is already the keyless search provider and content scraper in LibreChat's web search, and could fill the same role in Open WebUI with its own index instead of DDGS scraping. We'd like to open a PR adding Keenable as a provider, with a docs page under Providers.",
+    "week1_action": "Open a PR to open-webui adding a Keenable web search provider (keyless by default, optional key) and a matching docs page under web-search/providers."
+  }
+]

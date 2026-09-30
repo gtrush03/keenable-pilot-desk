@@ -1,0 +1,8 @@
+{
+  "name": "keenable-pilot-desk",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pilot Desk: run a prospect's own queries through Keenable's Search API and get a pilot verdict. Built by George Trushevskiy for Keenable's Founding GTM role.",
+  "engines": { "node": ">=20" }
+}

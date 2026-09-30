@@ -1,0 +1,43 @@
+// Query sets per prospect type. "gold" = the source a careful evaluator would expect near the top.
+window.PRESETS = [
+  { id: "lab", label: "Frontier lab eval", who: "A lab's agent team comparing search providers on their internal benchmark",
+    note: "Mirrors the five NEEDLE verticals: expert, legal, finance, news, deep-tail.",
+    queries: [
+      { q: "Attention Is All You Need original paper", gold: ["arxiv.org", "proceedings.neurips.cc", "papers.nips.cc"], tag: "expert" },
+      { q: "Loper Bright Enterprises v. Raimondo opinion", gold: ["supremecourt.gov", "law.cornell.edu", "justia.com", "oyez.org"], tag: "legal" },
+      { q: "40 CFR 60.5397a fugitive emissions standards", gold: ["ecfr.gov", "law.cornell.edu", "govinfo.gov"], tag: "legal" },
+      { q: "NVIDIA fiscal 2026 annual report 10-K", gold: ["sec.gov", "investor.nvidia.com", "nvidianews.nvidia.com"], tag: "finance" },
+      { q: "Baseten Hosted Tools launch", gold: ["baseten.co"], tag: "news" },
+      { q: "Lightpanda headless browser written in Zig", gold: ["lightpanda.io", "github.com/lightpanda-io"], tag: "deep-tail" },
+    ] },
+  { id: "infra", label: "Inference platform", who: "A platform that wants search as a hosted tool behind its models",
+    note: "What a hosted model gets asked when it has to look things up.",
+    queries: [
+      { q: "vLLM latest release notes", gold: ["github.com/vllm-project", "docs.vllm.ai", "blog.vllm.ai", "vllm-project.github.io"], tag: "docs" },
+      { q: "SGLang structured outputs documentation", gold: ["docs.sglang.ai", "docs.sglang.io", "github.com/sgl-project", "sgl-project.github.io"], tag: "docs" },
+      { q: "FlashAttention-3 paper", gold: ["arxiv.org", "tridao.me", "github.com/dao-ailab"], tag: "expert" },
+      { q: "Federal Reserve FOMC statement September 2026", gold: ["federalreserve.gov"], tag: "news" },
+      { q: "Baseten Model APIs pricing", gold: ["baseten.co"], tag: "commercial" },
+      { q: "Llama 4 Maverick model card", gold: ["huggingface.co/meta-llama", "llama.com", "github.com/meta-llama"], tag: "model" },
+    ] },
+  { id: "voice", label: "Voice agent", who: "A voice-agent team where every search is dead air",
+    note: "Short spoken questions; latency is the whole game.",
+    queries: [
+      { q: "Pipecat voice agent framework", gold: ["github.com/pipecat-ai", "pipecat.ai", "docs.pipecat.ai"], tag: "product" },
+      { q: "SFO airport parking rates", gold: ["flysfo.com"], tag: "local" },
+      { q: "Caltrain weekend schedule", gold: ["caltrain.com"], tag: "local" },
+      { q: "Golden State Warriors schedule", gold: ["nba.com", "espn.com"], tag: "sports" },
+      { q: "Gradium voice AI", gold: ["gradium.ai"], tag: "product" },
+      { q: "California DMV appointment", gold: ["dmv.ca.gov"], tag: "local" },
+    ] },
+  { id: "code", label: "Coding agent", who: "A coding agent that must read today's docs, not last year's",
+    note: "Docs lookups where a stale page means broken code.",
+    queries: [
+      { q: "Python 3.14 what's new", gold: ["docs.python.org"], tag: "docs" },
+      { q: "Bun.serve websocket API", gold: ["bun.sh", "bun.com"], tag: "docs" },
+      { q: "Next.js 16 upgrade guide", gold: ["nextjs.org"], tag: "docs" },
+      { q: "PostgreSQL 18 release notes", gold: ["postgresql.org"], tag: "docs" },
+      { q: "Rust 2024 edition guide", gold: ["doc.rust-lang.org"], tag: "docs" },
+      { q: "Vercel AI SDK tool calling", gold: ["ai-sdk.dev", "sdk.vercel.ai", "vercel.com"], tag: "docs" },
+    ] },
+];
