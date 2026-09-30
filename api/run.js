@@ -21,7 +21,8 @@ export function goldRank(results, gold) {
     for (const g of gold) {
       const [d, ...p] = g.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/");
       const path = p.length ? "/" + p.join("/") : "";
-      if ((h === d || h.endsWith("." + d)) && u.pathname.toLowerCase().startsWith(path)) return { rank: i + 1, matched: g };
+      const pth = u.pathname.toLowerCase();
+      if ((h === d || h.endsWith("." + d)) && (!path || pth === path || pth.startsWith(path + "/"))) return { rank: i + 1, matched: g };
     }
   }
   return { rank: 0, matched: null };

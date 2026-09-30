@@ -16,7 +16,7 @@
     "keenable_listed": false,
     "play": "hosted tool",
     "why": "Its web plugin already routes search to a pluggable engine parameter, so one new engine value would put Keenable behind every non-native model on the router.",
-    "first_touch": "Your web plugin exposes an engine parameter (native, exa, firecrawl, parallel, perplexity) and defaults to Exa for models without native search. Keenable is a search API with its own index and realtime and pro modes, plus a point-in-time query_time parameter for reproducible results. Would you consider \"keenable\" as an engine value? We can supply the adapter code and cover domain filters to match your compatibility table.",
+    "first_touch": "Your web plugin exposes an engine parameter (native, exa, firecrawl, parallel, perplexity) and defaults to Exa for models without native search. Keenable is a search API with its own index and realtime and pro modes, plus a point-in-time query_time parameter for reproducible results. Would you consider \"keenable\" as an engine value? Keenable could supply the adapter code and cover domain filters to match your compatibility table.",
     "week1_action": "Map Keenable's search response onto OpenRouter's url_citation annotation schema and send the platform team a working engine adapter plus a latency/quality comparison against the Exa default."
   },
   {
@@ -32,7 +32,7 @@
     "keenable_listed": false,
     "play": "hosted tool",
     "why": "Groq runs web search server-side in the inference loop (browser_search on gpt-oss models), the same hosted-tool pattern Keenable already ships on Baseten; its docs also show Compound was decommissioned on 21 Sep 2026, so its built-in tool stack is changing now.",
-    "first_touch": "Your browser_search built-in tool for gpt-oss-120b and gpt-oss-20b runs server-side and is powered by Exa. Keenable already runs as a server-side search and fetch tool on Baseten Model APIs, inside the inference loop. If you are evaluating a second backend or a fetch tool, we can share that Baseten setup and run a side-by-side on your latency targets.",
+    "first_touch": "Your browser_search built-in tool for gpt-oss-120b and gpt-oss-20b runs server-side and is powered by Exa. Keenable already runs as a server-side search and fetch tool on Baseten Model APIs, inside the inference loop. If you are evaluating a second backend or a fetch tool, Keenable could share that Baseten setup and run a side-by-side on your latency targets.",
     "week1_action": "Build a gpt-oss-120b demo on Groq that calls Keenable search and fetch as local tools, measure end-to-end latency against browser_search, and send the numbers to Groq's platform team."
   },
   {
@@ -64,7 +64,7 @@
     "keenable_listed": false,
     "play": "hosted tool",
     "why": "Fireworks now answers harness WebSearch calls server-side for any model, so it needs a search backend it controls; that is the Baseten-style hosted-tool slot.",
-    "first_touch": "Your FireConnect docs say Fireworks now handles Claude Code's native WebSearch server-side for any Fireworks model, replacing the old fireworks-websearch MCP. Keenable runs as the server-side search and fetch tool on Baseten Model APIs and has its own index, with realtime and pro modes. If the backend behind that search is open to evaluation, we can share our Baseten setup and run a benchmark on your traffic shape.",
+    "first_touch": "Your FireConnect docs say Fireworks now handles Claude Code's native WebSearch server-side for any Fireworks model, replacing the old fireworks-websearch MCP. Keenable runs as the server-side search and fetch tool on Baseten Model APIs and has its own index, with realtime and pro modes. If the backend behind that search is open to evaluation, Keenable could share its Baseten setup and run a benchmark on your traffic shape.",
     "week1_action": "Send Fireworks' platform team a short benchmark of Keenable search and fetch against the WebSearch/WebFetch contract their FireConnect docs describe."
   },
   {
@@ -101,7 +101,7 @@
     "keenable_listed": false,
     "play": "provider option",
     "why": "CrewAI's search-and-research tools page is a shelf of competing search APIs (Serper, Brave, Exa, Linkup, Tavily, SerpApi), and every tool listed needs a key, so a keyless option would stand out.",
-    "first_touch": "The Search & Research page in the crewai-tools docs lists Serper, Brave, Exa, LinkUp, Tavily and SerpApi, and each one needs an API key. Keenable has its own index and a keyless public endpoint, so a KeenableSearchTool would work in a fresh crew with no signup. We'd like to open a PR adding KeenableSearchTool and KeenableFetchTool next to TavilySearchTool, with docs and tests.",
+    "first_touch": "The Search & Research page in the crewai-tools docs lists Serper, Brave, Exa, LinkUp, Tavily and SerpApi, and each one needs an API key. Keenable has its own index and a keyless public endpoint, so a KeenableSearchTool would work in a fresh crew with no signup. Would you take a PR adding KeenableSearchTool and KeenableFetchTool next to TavilySearchTool, with docs and tests?",
     "week1_action": "Open a PR adding KeenableSearchTool and KeenableFetchTool next to TavilySearchTool in crewai-tools, plus a docs page in the Search & Research section."
   },
   {
@@ -119,8 +119,8 @@
     "keyless_fallback": true,
     "keenable_listed": false,
     "play": "keyless default",
-    "why": "smolagents defaults to keyless scraping-style search (DuckDuckGoSearchTool, and WebSearchTool with engine='duckduckgo'), which is the exact slot Keenable fills in Nanobot and ZeroClaw with an API built for agents.",
-    "first_touch": "The default_tools reference lists DuckDuckGoSearchTool and WebSearchTool (engine='duckduckgo') as the keyless options, and ApiWebSearchTool, which defaults to the Brave API and needs BRAVE_API_KEY. Keenable's public endpoint needs no key (1,000 req/hour per IP with an X-Keenable-Title header), so it could be a keyless engine that doesn't depend on scraping. Would you take a PR adding 'keenable' as an engine option to WebSearchTool?",
+    "why": "smolagents defaults to keyless DuckDuckGo-based search (DuckDuckGoSearchTool, and WebSearchTool with engine='duckduckgo'), which is the exact slot Keenable fills in Nanobot and ZeroClaw with an API built for agents.",
+    "first_touch": "The default_tools reference lists DuckDuckGoSearchTool and WebSearchTool (engine='duckduckgo') as the keyless options, and ApiWebSearchTool, which defaults to the Brave API and needs BRAVE_API_KEY. Keenable's public endpoint needs no key (1,000 req/hour per IP with an X-Keenable-Title header) and is built for agents, so it could be a keyless engine option. Would you take a PR adding 'keenable' as an engine option to WebSearchTool?",
     "week1_action": "Open a PR adding engine='keenable' to smolagents' WebSearchTool (keyless public endpoint), with tests and a docs update."
   },
   {
@@ -154,7 +154,7 @@
     "keenable_listed": false,
     "play": "provider option",
     "why": "Agno calls the keyless DDGS-based WebSearchTools its recommended general search toolkit, and its toolkit index (https://docs.agno.com/tools/toolkits/overview) lists more than 20 search toolkits, including Exa, Tavily, Linkup, Parallel, Perplexity and Brave Search, but not Keenable.",
-    "first_touch": "Your docs recommend WebSearchTools, which uses DDGS across Google, Bing, DuckDuckGo and other backends, and the toolkit index lists Exa, Tavily, Linkup, Parallel and others. Keenable would add a keyless search API with its own index and a fetch tool that returns markdown. We'd like to contribute a KeenableTools toolkit with a docs page in the Search section.",
+    "first_touch": "Your docs recommend WebSearchTools, which uses DDGS across Google, Bing, DuckDuckGo and other backends, and the toolkit index lists Exa, Tavily, Linkup, Parallel and others. Keenable would add a keyless search API with its own index and a fetch tool that returns markdown. Would you take a KeenableTools toolkit with a docs page in the Search section?",
     "week1_action": "Open a PR adding agno/tools/keenable.py (KeenableTools: search and fetch, keyless by default) plus a docs page under tools/toolkits/search."
   },
   {
@@ -204,7 +204,7 @@
     "keenable_listed": false,
     "play": "template/cookbook",
     "why": "Goose adds web search through MCP extension tutorials and one-click goose:// install links, and Keenable already runs an MCP server, so a docs page is the whole integration.",
-    "first_touch": "Goose's docs have a Tavily Web Search Extension page with a goose:// one-click installer that needs TAVILY_API_KEY. Keenable has an MCP server for search and fetch, and a keyless public endpoint. We'd like to contribute a matching \"Keenable Web Search Extension\" tutorial with an installer link.",
+    "first_touch": "Goose's docs have a Tavily Web Search Extension page with a goose:// one-click installer that needs TAVILY_API_KEY. Keenable has an MCP server for search and fetch, and a keyless public endpoint. Would you take a matching \"Keenable Web Search Extension\" tutorial with an installer link?",
     "week1_action": "Open a docs PR adding a Keenable Web Search Extension page (MCP config plus goose:// install link) to Goose's MCP servers section."
   },
   {
@@ -222,8 +222,8 @@
     "keyless_fallback": false,
     "keenable_listed": false,
     "play": "provider option",
-    "why": "LiveKit Agents only gets web search through model-provider tools tied to specific LLMs, and Keenable already ships KeenableWebSearch for Pipecat, the closest open-source voice framework, so this is a direct port.",
-    "first_touch": "LiveKit Agents' tools doc gets web search only from provider tools (OpenAI WebSearch, Gemini GoogleSearch, Mistral and SpaceXAI WebSearch), which lock the agent to those LLMs. Keenable already ships a low-latency KeenableWebSearch for Pipecat voice agents and could offer the same as a model-agnostic LiveKit plugin or function tool. Would you be open to a livekit-plugins-keenable package or an example in the examples folder?",
+    "why": "LiveKit Agents' built-in search comes from model-provider tools tied to specific LLMs (it also supports custom function tools and MCP), and Keenable already ships KeenableWebSearch for Pipecat, the closest open-source voice framework, so a packaged, model-agnostic Keenable tool is a direct port.",
+    "first_touch": "The provider tools in your tools doc (OpenAI WebSearch, Gemini GoogleSearch, Mistral and SpaceXAI WebSearch) each come with a specific LLM; anything else is left to a custom function tool or MCP. Keenable already ships a low-latency KeenableWebSearch for Pipecat voice agents and could offer the same as a packaged, model-agnostic LiveKit tool. Would you be open to a livekit-plugins-keenable package or an example in the examples folder?",
     "week1_action": "Port the Pipecat KeenableWebSearch to a livekit-plugins-keenable function tool and open a PR adding a voice web-search example to livekit/agents."
   },
   {
@@ -246,7 +246,7 @@
     "keenable_listed": false,
     "play": "keyless default",
     "why": "Open WebUI already documents 28 web search providers, including a keyless DDGS option, and Keenable is already the keyless provider in LibreChat, the closest comparable open chat UI.",
-    "first_touch": "Your web search docs list 28 providers and note that some work without an account. Keenable is already the keyless search provider and content scraper in LibreChat's web search, and could fill the same role in Open WebUI with its own index instead of DDGS scraping. We'd like to open a PR adding Keenable as a provider, with a docs page under Providers.",
+    "first_touch": "Your web search docs list 28 providers and note that some work without an account. Keenable is already the keyless search provider and content scraper in LibreChat's web search, and could fill the same role in Open WebUI backed by its own index. Would you take a PR adding Keenable as a provider, with a docs page under Providers?",
     "week1_action": "Open a PR to open-webui adding a Keenable web search provider (keyless by default, optional key) and a matching docs page under web-search/providers."
   }
 ]

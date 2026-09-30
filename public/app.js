@@ -61,6 +61,7 @@
     const calls = queries.length * modes.length;
     status(`Running ${calls} live searches…`);
     const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort(), 55000);
+    const deadline = Date.now() + 75000; // hard stop for the whole run, browser fallback included
     try {
       let j = null, serverStatus = 0;
       try {
@@ -79,6 +80,7 @@
       let retried = 0;
       for (const row of j.rows) for (let k = 0; k < row.runs.length; k++) {
         if (row.runs[k].ok) continue;
+        if (Date.now() > deadline) { row.runs[k] = { mode: row.runs[k].mode, ok: false, ms: 0, error: "timeout" }; continue; }
         row.runs[k] = await browserSearch(row, row.runs[k].mode, j.filters || {}); retried++;
       }
       j.preset = preset.id === "custom" ? null : preset.id; j.label = preset.label; j.who = preset.who;
@@ -123,7 +125,8 @@
       for (const g of gold) {
         const [d, ...p] = g.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/");
         const path = p.length ? "/" + p.join("/") : "";
-        if ((h === d || h.endsWith("." + d)) && u.pathname.toLowerCase().startsWith(path)) return { rank: i + 1, matched: g };
+        const pth = u.pathname.toLowerCase();
+        if ((h === d || h.endsWith("." + d)) && (!path || pth === path || pth.startsWith(path + "/"))) return { rank: i + 1, matched: g };
       }
     }
     return { rank: 0, matched: null };
@@ -133,11 +136,11 @@
     for (let t = 0; t < 3; t++) {
       const t0 = performance.now();
       try {
-        const r = await fetch("https://api.keenable.ai/v1/search/public?keenable_title=keenable-pilot-desk", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(req) });
-        const ms = Math.round(performance.now() - t0);
+        const r = await fetch("https://api.keenable.ai/v1/search/public?keenable_title=keenable-pilot-desk", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(req), signal: AbortSignal.timeout(9000) });
         if (r.status === 429) { await new Promise((s) => setTimeout(s, 800 * (t + 1))); continue; }
-        if (!r.ok) return { mode, ok: false, ms, error: "upstream_error", origin: "browser" };
+        if (!r.ok) return { mode, ok: false, ms: 0, error: "upstream_error", origin: "browser" };
         const j = await r.json();
+        const ms = Math.round(performance.now() - t0);
         const results = (j.results || []).slice(0, 10).map((x) => { let host = ""; try { host = new URL(x.url).hostname.replace(/^www\./, ""); } catch {} return { title: (x.title || "").slice(0, 160), url: x.url, host, snippet: (x.snippet || x.description || "").slice(0, 240), published_at: x.published_at || null, acquired_at: x.acquired_at || null }; });
         const g = goldRank(results, row.gold);
         await new Promise((s) => setTimeout(s, 150));
@@ -181,8 +184,16 @@
     const primary = j.modes.includes("realtime") ? "realtime" : j.modes[0];
     m.primary = primary;
     const scored = j.rows.filter((r) => r.gold?.length);
-    const pr = (r) => r.runs.find((x) => x.mode === primary && x.ok) || r.runs.find((x) => x.ok);
+    const pr = (r) => r.runs.find((x) => x.mode === primary && x.ok); // never borrow another mode's result
+    const all = j.rows.flatMap((r) => r.runs);
+    m.attempted = all.length; m.failed = all.filter((x) => !x.ok).length;
+    m.scoredAttempted = scored.length;
     m.scored = scored.filter((r) => pr(r)).length;
+    m.byMode = {};
+    for (const mode of j.modes) {
+      const runs = scored.map((r) => r.runs.find((x) => x.mode === mode && x.ok)).filter(Boolean);
+      m.byMode[mode] = { n: runs.length, top3: runs.filter((x) => x.gold_rank >= 1 && x.gold_rank <= 3).length };
+    }
     m.top1 = scored.filter((r) => { const x = pr(r); return x && x.gold_rank === 1; }).length;
     m.top3 = scored.filter((r) => { const x = pr(r); return x && x.gold_rank >= 1 && x.gold_rank <= 3; }).length;
     m.top10 = scored.filter((r) => { const x = pr(r); return x && x.gold_rank >= 1; }).length;
@@ -217,7 +228,8 @@
     const L = m.lat;
     let html = "";
     for (const mode of j.modes) html += tile(`${mode} latency`, L[mode].p50 != null ? `${L[mode].p50} ms` : "–", L[mode].p95 != null ? `p50 · p95 ${L[mode].p95} ms (n=${L[mode].n})` : "no successful calls");
-    html += tile("Expected source in top 3", m.scored ? `${m.top3}/${m.scored}` : "–", m.scored ? `top 1: ${m.top1} · top 10: ${m.top10} (${m.primary})` : "add | domains to score");
+    html += tile("Expected source in top 3", m.scored ? `${m.top3}/${m.scored}` : "–", m.scored ? `top 1: ${m.top1} · top 10: ${m.top10} (${m.primary})${j.modes.length === 2 ? ` · pro ${m.byMode.pro.top3}/${m.byMode.pro.n}` : ""}` : "add | domains to score");
+    if (m.failed) html += tile("Searches completed", `${m.attempted - m.failed}/${m.attempted}`, "failed calls are left out, never guessed");
     html += tile("Crawl freshness", m.crawlAge != null ? `${m.crawlAge < 1 ? "<1" : Math.round(m.crawlAge)} d` : "–", "median age of the top-3 pages' crawl date");
     if (m.both != null && j.modes.length === 2) html += tile("realtime vs pro", `${m.same}/${m.both}`, "queries with the identical top-10 list");
     $("#score").innerHTML = html;
@@ -226,7 +238,7 @@
     let t = `<thead><tr><th>Query</th><th>Expected source</th>${modes.map((x) => `<th>${x}</th>`).join("")}<th>Top results (${m.primary})</th></tr></thead><tbody>`;
     for (const r of j.rows) {
       const tag = (j.queries || []).find((q) => q.q === r.q)?.tag;
-      const pr = r.runs.find((x) => x.mode === m.primary && x.ok) || r.runs.find((x) => x.ok);
+      const pr = r.runs.find((x) => x.mode === m.primary && x.ok);
       const rk = pr?.gold_rank;
       const rcls = !r.gold?.length || rk == null ? "na" : rk === 0 ? "bad" : rk <= 3 ? "good" : "mid";
       const rtxt = !r.gold?.length ? "not set" : rk == null ? "–" : rk === 0 ? "not in 10" : "#" + rk;
@@ -234,10 +246,10 @@
       t += `<td><span class="rank ${rcls}">${rtxt}</span></td>`;
       for (const mode of modes) { const x = r.runs.find((y) => y.mode === mode); t += `<td class="num">${x?.ok ? x.ms + " ms" + (x.origin === "browser" ? `<div class="fine">from browser</div>` : "") : `<span class="err">${esc(x?.error || "–")}</span>`}</td>`; }
       if (pr) {
-        const items = pr.results.slice(0, 5).map((y, i) => `<li class="${pr.gold_rank === i + 1 ? "hit" : ""}"><a href="${esc(y.url)}" target="_blank" rel="noopener nofollow">${esc(y.title || y.url)}</a><div class="h">${esc(y.host)}${y.published_at ? " · published " + esc(y.published_at.slice(0, 10)) : ""}${y.acquired_at ? " · crawled " + esc(y.acquired_at.slice(0, 10)) : ""}</div></li>`).join("");
+        const items = pr.results.slice(0, 10).map((y, i) => `<li class="${pr.gold_rank === i + 1 ? "hit" : ""}"><a href="${esc(y.url)}" target="_blank" rel="noopener nofollow">${esc(y.title || y.url)}</a>${y.snippet ? `<div class="snip">${esc(y.snippet)}</div>` : ""}<div class="h">${esc(y.host)}${y.published_at ? " · published " + esc(y.published_at.slice(0, 10)) : ""}${y.acquired_at ? " · crawled " + esc(y.acquired_at.slice(0, 10)) : ""}</div></li>`).join("");
         const top = pr.results[0];
-        t += `<td><div>${pr.results.slice(0, 3).map((y) => esc(y.host)).join(" · ") || "no results"}</div><details><summary>Top 5</summary><ol class="res">${items}</ol></details>${top ? `<button class="btn small ghost read" data-url="${esc(top.url)}" data-q="${esc(r.q)}">Answer from #1 with Fetch</button><div class="ans" hidden></div>` : ""}</td>`;
-      } else t += `<td class="err">no results</td>`;
+        t += `<td><div>${pr.results.slice(0, 3).map((y) => esc(y.host)).join(" · ") || "no results"}</div><details><summary>All ${pr.results.length} results</summary><ol class="res">${items}</ol></details>${top ? `<button class="btn small ghost read" data-url="${esc(top.url)}" data-q="${esc(r.q)}">Answer from #1 with Fetch</button><div class="ans" hidden></div>` : ""}</td>`;
+      } else t += `<td class="err">${m.primary} search failed</td>`;
       t += "</tr>";
     }
     $("#results").innerHTML = t + "</tbody>";
@@ -256,23 +268,32 @@
     const tile = (k, v, s) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
     $("#calc-out").innerHTML = tile("Requests / month", (c.perMonth / 1e6).toFixed(c.perMonth < 1e7 ? 1 : 0) + "M", `avg ${c.rps.toFixed(1)} req/s`) +
       tile("Builder list price", money(c.builder), "$4 / 1k after 100k free") +
-      tile("Frontier list price", money(c.frontier), c.rps >= 100 ? "$1 / 1k, qualifies at 100+ RPS" : "$1 / 1k needs 100+ RPS");
+      tile("Frontier list rate", money(c.frontier), "$1 / 1k, listed for 100+ RPS");
     if (last) $("#memo").textContent = memo(last);
   }
   ["#c-tasks", "#c-spt", "#c-fpt"].forEach((s) => $(s).addEventListener("input", renderCalc));
 
-  function renderSnippet() {
-    const q = last?.rows?.[0]?.q || "your query";
-    const qt = last?.filters?.query_time ? `, "query_time": "${last.filters.query_time}"` : "";
-    $("#snippet").textContent =
-`# REST, keyed (docs.keenable.ai/api-reference/search)
-curl -X POST https://api.keenable.ai/v1/search \\
-  -H "X-API-Key: $KEENABLE_API_KEY" -H "Content-Type: application/json" \\
-  -d '{"query": ${JSON.stringify(q)}, "mode": "realtime", "max_results": 10${qt}}'
+  function snippetFor(q, qt) {
+    return `// Keyless Keenable search tool for a JS agent harness (Node 18+, Bun, Deno).
+// Production swaps in /v1/search with an X-API-Key header (docs.keenable.ai/api-reference).
+async function keenableSearch(query, { mode = "realtime", maxResults = 10, queryTime } = {}) {
+  const r = await fetch("https://api.keenable.ai/v1/search/public", {
+    method: "POST",
+    headers: { "content-type": "application/json", "X-Keenable-Title": "my-eval" },
+    body: JSON.stringify({ query, mode, max_results: maxResults, ...(queryTime && { query_time: queryTime }) }),
+  });
+  if (!r.ok) throw new Error(\`keenable \${r.status}\`);
+  const { results } = await r.json();
+  return results.map(({ title, url, snippet, published_at }) => ({ title, url, snippet, published_at }));
+}
 
-# Any MCP agent (docs.keenable.ai/authentication)
-claude mcp add keenable --transport http https://api.keenable.ai/mcp \\
-  --header "X-API-Key: $KEENABLE_API_KEY"`;
+console.log(await keenableSearch(${JSON.stringify(q)}${qt ? `, { queryTime: ${JSON.stringify(qt)} }` : ""}));
+
+// Or give any MCP agent the tools, no key needed to try it (docs.keenable.ai/mcp-server):
+// claude mcp add keenable --transport http https://api.keenable.ai/mcp`;
+  }
+  function renderSnippet() {
+    $("#snippet").textContent = snippetFor(last?.rows?.[0]?.q || "your query", last?.filters?.query_time);
   }
 
   function memo(j) {
@@ -280,30 +301,33 @@ claude mcp add keenable --transport http https://api.keenable.ai/mcp \\
     const lat = j.modes.map((x) => L[x].n ? `${x}: p50 ${L[x].p50} ms, p95 ${L[x].p95} ms (n=${L[x].n})` : `${x}: no successful calls`).join("; ");
     const rate = m.scored ? m.top3 / m.scored : 0;
     const lines = [];
-    lines.push(`PILOT VERDICT: ${j.label || "Custom queries"}`);
+    lines.push(`PILOT READ (exploratory): ${j.label || "Custom queries"}`);
     lines.push(`${fmtTime(j.ran_at)}${j.prepared ? " (prepared run)" : ""}`);
     lines.push(`Prospect: ${j.who || "custom"}`);
     lines.push(`Setup: ${j.rows.length} queries x ${j.modes.join(" + ")}, Keenable Search API (${j.auth}), server region ${j.region}${j.filters?.query_time ? `, index frozen at ${j.filters.query_time}` : ""}${j.filters?.published_after ? `, published after ${j.filters.published_after}` : ""}.`);
     lines.push("");
     lines.push("RESULTS");
-    lines.push(`- Latency, end to end from the server: ${lat}.`);
-    if (m.scored) lines.push(`- Expected source in the top 3: ${m.top3}/${m.scored} (top 1: ${m.top1}, top 10: ${m.top10}).`);
+    lines.push(`- Searches completed: ${m.attempted - m.failed}/${m.attempted}.`);
+    lines.push(`- Latency, end to end incl. reading the response: ${lat}. Small sample; treat as indicative.`);
+    if (m.scored) lines.push(`- Expected source in the top 3 (${m.primary}): ${m.top3}/${m.scored} (top 1: ${m.top1}, top 10: ${m.top10}). A domain match is a proxy for relevance, not a graded answer.`);
     if (m.crawlAge != null) lines.push(`- Crawl freshness: the top-3 pages were crawled a median ${m.crawlAge < 1 ? "under 1" : Math.round(m.crawlAge)} day(s) before the run.`);
-    if (m.both) lines.push(`- realtime vs pro: identical top-10 on ${m.same}/${m.both} queries${m.same === m.both ? " on this tier; a keyed pilot should test whether pro changes the misses" : ""}.`);
+    if (m.both) lines.push(`- realtime vs pro: identical top-10 on ${m.same}/${m.both} queries${m.same === m.both ? " on the keyless tier; worth asking the team how the modes differ on keyed traffic" : ""}.`);
     if (m.wins.length) { lines.push(""); lines.push("WHERE IT WINS"); m.wins.forEach((q) => lines.push(`- ${q}`)); }
     if (m.misses.length) {
       lines.push(""); lines.push("WHERE TO DIG IN (take to the search team)");
       m.misses.forEach((x) => lines.push(`- ${x.q}: ${x.rank ? `first expected source (${x.matched}) at #${x.rank}` : `none of ${x.gold.join(", ")} in the top 10`}; top 3 were ${x.got.join(", ")}`));
     }
-    lines.push(""); lines.push("RECOMMENDATION");
-    if (!m.scored) lines.push("- Add the domains an evaluator would expect to each query, then rerun to score it.");
-    else if (rate >= 0.8) lines.push("- Ready: propose the pilot now. Lead with latency and the wins above.");
-    else if (rate >= 0.5) lines.push("- Ready after prep: propose the pilot, but take the misses to the search team first so we raise them before the prospect does, and rerun them with a key in pro mode.");
-    else lines.push("- Not yet: this set plays to competitors' strengths. Fix or explain the misses with the search team, rerun with a key in pro mode, then book the pilot.");
-    lines.push(`- Pilot shape: 2 weeks on their own benchmark, index frozen with query_time so reruns match, success = expected-source@3 at least equal to their current provider, p95 under their latency budget, cost per 1,000 tasks.`);
-    lines.push(""); lines.push("SIZE (list prices, keenable.ai/pricing)");
+    lines.push(""); lines.push("READ");
+    if (m.failed) lines.push(`- Incomplete: ${m.failed} of ${m.attempted} searches failed. Rerun before drawing any conclusion.`);
+    else if (m.scored < 3) lines.push("- Too few scored queries to read anything. Add the domains an evaluator would expect to each query and rerun.");
+    else if (rate >= 0.8) lines.push("- Promising on this sample. Lead with latency and the wins above.");
+    else if (rate >= 0.5) lines.push("- Mixed on this sample. Take the misses to the search team before the prospect finds them.");
+    else lines.push("- Weak on this sample. Understand the misses with the search team before proposing a pilot.");
+    lines.push("- Before any pilot: run their current provider on the same queries as the baseline, and agree acceptance criteria and a decision date.");
+    lines.push(`- Proposed pilot shape: 2 weeks on their own benchmark with graded answers, retrieval pinned with query_time so reruns see the same index, success = answer quality at least equal to the baseline, p95 under their latency budget, total cost per 1,000 tasks including tokens read.`);
+    lines.push(""); lines.push("SIZE (illustrative, list prices from keenable.ai/pricing)");
     lines.push(`- ${c.tasks.toLocaleString("en-US")} tasks/day x (${c.spt} searches + ${c.fpt} fetches) = ${(c.perMonth / 1e6).toFixed(1)}M requests/month, avg ${c.rps.toFixed(1)} req/s.`);
-    lines.push(`- Builder tier ${money(c.builder)}/month; frontier tier ${money(c.frontier)}/month${c.rps >= 100 ? " (qualifies: 100+ RPS)" : ` (the frontier rate is listed for 100+ RPS; at ${c.rps.toFixed(0)} req/s this is a volume-commitment conversation)`}.`);
+    lines.push(`- Builder tier ${money(c.builder)}/month; frontier rate ${money(c.frontier)}/month (listed for 100+ RPS; this workload averages ${c.rps.toFixed(1)} req/s, so that rate is a negotiation, not a given).`);
     return lines.join("\n");
   }
 
@@ -344,7 +368,7 @@ claude mcp add keenable --transport http https://api.keenable.ai/mcp \\
       <blockquote class="quote">"${esc(x.evidence)}" <a href="${esc(x.source)}" target="_blank" rel="noopener">source</a></blockquote>
       <div class="act"><b>Week one:</b> ${esc(x.week1_action)}</div>
       <div class="fine">${esc(x.why)}</div>
-      <details><summary>First-touch draft</summary><div class="draft"><div class="lab">Draft, not sent</div>${esc(x.first_touch)}</div></details>
+      <details><summary>First-touch draft</summary><div class="draft"><div class="lab">Draft, as I would write it in the role. Not sent.</div>${esc(x.first_touch)}</div></details>
     </article>`).join("");
   }
 

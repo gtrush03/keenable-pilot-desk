@@ -1,0 +1,87 @@
+{
+ "query": "Keenable Baseten partnership",
+ "now": {
+  "ran_at": "2026-09-30T04:04:01.773Z",
+  "filters": {},
+  "results": [
+   {
+    "host": "keenable.ai",
+    "title": "Keenable partners with Baseten to make web search native to inference - Keenable.ai",
+    "url": "https://keenable.ai/blog/keenable-partners-with-baseten",
+    "acquired_at": "2026-09-16T20:51:53Z",
+    "published_at": "2026-09-16T00:00:00Z"
+   },
+   {
+    "host": "baseten.co",
+    "title": "Introducing Baseten Hosted Tools",
+    "url": "https://www.baseten.co/blog/introducing-baseten-hosted-tools/",
+    "acquired_at": "2026-09-17T07:31:40Z",
+    "published_at": "2026-09-16T16:52:23Z"
+   },
+   {
+    "host": "docs.keenable.ai",
+    "title": "Baseten",
+    "url": "https://docs.keenable.ai/integrations/baseten",
+    "acquired_at": "2026-09-17T15:28:06Z",
+    "published_at": "2026-09-16T14:41:54Z"
+   },
+   {
+    "host": "tipranks.com",
+    "title": "Baseten Introduces Integrated Web Search Tools for Hosted Open-Source Models",
+    "url": "https://tipranks.com/news/private-companies/baseten-introduces-integrated-web-search-tools-for-hosted-open-source-models",
+    "acquired_at": "2026-09-18T13:07:10Z",
+    "published_at": "2026-09-17T00:24:34Z"
+   },
+   {
+    "host": "www-linkedin-com.translate.goog",
+    "title": "Baseten | LinkedIn",
+    "url": "https://www-linkedin-com.translate.goog/company/baseten?_x_tr_hl=ar&_x_tr_pto=tc&_x_tr_sl=en&_x_tr_tl=ar&trk=nav_type_overview",
+    "acquired_at": "2026-09-17T14:10:40Z",
+    "published_at": "2026-09-16T19:56:43Z"
+   }
+  ]
+ },
+ "frozen": {
+  "ran_at": "2026-09-30T04:04:02.106Z",
+  "filters": {
+   "query_time": "2026-09-15"
+  },
+  "results": [
+   {
+    "host": "valueaddvc.com",
+    "title": "Conviction — Portfolio, Funds & Investment Activity | Value Add VC",
+    "url": "https://valueaddvc.com/vc/conviction",
+    "acquired_at": "2026-09-07T18:21:18Z",
+    "published_at": null
+   },
+   {
+    "host": "parsers.vc",
+    "title": "Conviction â€“ Portfolio, Partners, Reviews, News | Parsers VC",
+    "url": "https://parsers.vc/fund/conviction.com",
+    "acquired_at": "2026-09-09T23:08:34Z",
+    "published_at": "2026-09-04T01:55:31Z"
+   },
+   {
+    "host": "note.com",
+    "title": "What is Keenable: The 'AI Agent-Only' Search API Built by Former Yandex Search Leaders, and the Details of Their $26 Million Funding｜アイドリ",
+    "url": "https://note.com/ai_driven/n/n1639bb95690d?hl=en",
+    "acquired_at": "2026-09-03T13:35:40Z",
+    "published_at": "2026-08-26T08:05:46Z"
+   },
+   {
+    "host": "baseten.co",
+    "title": "Partner with Baseten",
+    "url": "https://www.baseten.co/talk-to-us/partner/",
+    "acquired_at": "2026-05-17T20:21:07Z",
+    "published_at": null
+   },
+   {
+    "host": "aitrove.ai",
+    "title": "Keenable Exits Stealth With $26M to Index the Web for AI Agents — Why the 'Ten Blue Links' Era Is Ending",
+    "url": "https://aitrove.ai/blog/keenable-26m-ai-agent-web-index-2026",
+    "acquired_at": "2026-09-02T00:05:16Z",
+    "published_at": "2026-08-25T00:00:00Z"
+   }
+  ]
+ }
+}

@@ -123,3 +123,7 @@ ol.res li.hit .h{color:var(--good);font-weight:600}
 .read{margin-top:6px}
 .ans{font-size:13px;background:var(--bg);border-left:3px solid var(--acc);border-radius:6px;padding:8px 10px;margin-top:6px}
 .ans .lab{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+ol.res .snip{font-size:12px;color:var(--ink2);margin-top:2px}
+.plays .card p{margin:.35em 0;color:var(--ink2);font-size:14px}
+.plays .kind{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--acc);font-weight:600;margin-bottom:4px}
+.plays h3{margin-bottom:8px}

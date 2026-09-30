@@ -13,10 +13,10 @@ export async function search(body, { timeoutMs = 9000 } = {}) {
   const t0 = performance.now();
   try {
     const r = await fetch(url, { method: "POST", headers, body: JSON.stringify(body), signal: ctrl.signal });
-    const ms = Math.round(performance.now() - t0);
     const remaining = r.headers.get("x-ratelimit-remaining");
     let json = null;
     try { json = await r.json(); } catch {}
+    const ms = Math.round(performance.now() - t0); // includes reading the body
     if (!r.ok) return { ok: false, status: r.status, ms, remaining, error: errorText(r.status, json) };
     return { ok: true, status: r.status, ms, remaining, mode: json?.mode, results: json?.results || [] };
   } catch (e) {
