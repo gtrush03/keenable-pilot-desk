@@ -147,6 +147,24 @@
     return { mode, ok: false, ms: 0, error: "rate_limited", origin: "browser" };
   }
 
+  // ---------- search -> fetch -> answer, all on Keenable (Fetch's prompt parameter does the extraction) ----------
+  document.addEventListener("click", async (e) => {
+    const b = e.target.closest("button.read"); if (!b) return;
+    const box = b.nextElementSibling; b.disabled = true; b.textContent = "Reading…";
+    const prompt = `Answer this question from the page in at most two sentences: "${b.dataset.q}". If the page does not answer it, say so.`;
+    const t0 = performance.now();
+    try {
+      const r = await fetch(`https://api.keenable.ai/v1/fetch/public?keenable_title=keenable-pilot-desk&url=${encodeURIComponent(b.dataset.url)}&prompt=${encodeURIComponent(prompt)}`);
+      const ms = Math.round(performance.now() - t0);
+      if (!r.ok) throw new Error(r.status === 429 ? "Keenable's keyless pool is busy; try again in a moment." : "Fetch couldn't read that page (it may not be in the index).");
+      const j = await r.json();
+      box.innerHTML = `<div class="lab">Keenable Fetch with a prompt · ${ms} ms</div>${esc((j.content || "").slice(0, 600)) || "The page came back empty."}`;
+    } catch (err) {
+      box.innerHTML = `<span class="err">${esc(err.message && !err.message.startsWith("Failed") ? err.message : "Couldn't reach Keenable from this browser.")}</span>`;
+    }
+    box.hidden = false; b.hidden = true;
+  });
+
   // ---------- metrics ----------
   const pct = (arr, p) => { if (!arr.length) return null; const s = [...arr].sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.ceil((p / 100) * s.length) - 1)]; };
   const fmtTime = (iso) => { try { return new Date(iso).toISOString().replace("T", " ").slice(0, 16) + " UTC"; } catch { return iso; } };
@@ -217,7 +235,8 @@
       for (const mode of modes) { const x = r.runs.find((y) => y.mode === mode); t += `<td class="num">${x?.ok ? x.ms + " ms" + (x.origin === "browser" ? `<div class="fine">from browser</div>` : "") : `<span class="err">${esc(x?.error || "–")}</span>`}</td>`; }
       if (pr) {
         const items = pr.results.slice(0, 5).map((y, i) => `<li class="${pr.gold_rank === i + 1 ? "hit" : ""}"><a href="${esc(y.url)}" target="_blank" rel="noopener nofollow">${esc(y.title || y.url)}</a><div class="h">${esc(y.host)}${y.published_at ? " · published " + esc(y.published_at.slice(0, 10)) : ""}${y.acquired_at ? " · crawled " + esc(y.acquired_at.slice(0, 10)) : ""}</div></li>`).join("");
-        t += `<td><div>${pr.results.slice(0, 3).map((y) => esc(y.host)).join(" · ") || "no results"}</div><details><summary>Top 5</summary><ol class="res">${items}</ol></details></td>`;
+        const top = pr.results[0];
+        t += `<td><div>${pr.results.slice(0, 3).map((y) => esc(y.host)).join(" · ") || "no results"}</div><details><summary>Top 5</summary><ol class="res">${items}</ol></details>${top ? `<button class="btn small ghost read" data-url="${esc(top.url)}" data-q="${esc(r.q)}">Answer from #1 with Fetch</button><div class="ans" hidden></div>` : ""}</td>`;
       } else t += `<td class="err">no results</td>`;
       t += "</tr>";
     }
